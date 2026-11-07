@@ -41,12 +41,25 @@ jobs:
       - name: Aplicar icone e tela cheia
         run: |
           pip install pillow
-          python3 - <<'PY'
-          from PIL import Image, ImageDraw
-          RES = 'android/app/src/main/res'
-          import shutil, os
-          shutil.rmtree(RES + '/mipmap-anydpi-v26', ignore_errors=True)
-          src = Image.open('icon.png').convert('RGB')
-          for d, n in {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192}.items():
-              a = src.resize((n, n), Image.LANCZOS)
-              a.save(f'{RES}/mipmap-{d}/ic_launche
+          python3 icones.py
+          cp MainActivity.java android/app/src/main/java/com/kadyworld/app/MainActivity.java
+
+      - name: Compilar APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Renomear APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk KadyWorld.apk
+
+      - name: Guardar APK (artefato)
+        uses: actions/upload-artifact@v4
+        with:
+          name: KadyWorld-apk
+          path: KadyWorld.apk
+
+      - name: Publicar em Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: Kady World APK ${{ github.run_number }}
+          files: KadyWorld.apk

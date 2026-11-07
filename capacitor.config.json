@@ -1,0 +1,7 @@
+{
+  "appId": "com.kadyworld.app",
+  "appName": "Kady World",
+  "webDir": "www",
+  "server": { "androidScheme": "https" },
+  "android": { "allowMixedContent": true }
+}

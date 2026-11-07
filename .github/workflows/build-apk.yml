@@ -1,0 +1,52 @@
+name: Gerar APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Preparar o jogo (offline)
+        run: |
+          mkdir www
+          mv index.html www/index.html
+          curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js -o www/three.min.js
+          sed -i 's#https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js#three.min.js#g' www/index.html
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Criar projeto Android
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Aplicar icone e tela cheia
+        run: |
+          pip install pillow
+          python3 - <<'PY'
+          from PIL import Image, ImageDraw
+          RES = 'android/app/src/main/res'
+          import shutil, os
+          shutil.rmtree(RES + '/mipmap-anydpi-v26', ignore_errors=True)
+          src = Image.open('icon.png').convert('RGB')
+          for d, n in {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192}.items():
+              a = src.resize((n, n), Image.LANCZOS)
+              a.save(f'{RES}/mipmap-{d}/ic_launche
